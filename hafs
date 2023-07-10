@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>permission_hafs</title>
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css" />
+    <script defer src="https://pyscript.net/alpha/pyscript.js"></script>    
+  </head>
+  <body>
+    <py-script>
+        import hashlib
+
+        h = hashlib.sha256()
+        h.update(b'Genesis')
+        print(h.hexdigest())
+
+        from hashlib import sha256
+
+        prev_hash = b'Genesis'
+        for _ in range(3):
+            print(prev_hash.hex())
+            prev_hash = sha256(prev_hash).digest()
+    
+        print(prev_hash.hex())
+
+        from hashlib import sha256
+
+        blockchain = []
+
+        def make_genesis_block():
+            """첫 블록을 만듭니다"""
+            data = 'Genesis'
+            prev_hash = b''
+            current_hash = make_hash (data,prev_hash)
+            blockchain.append((data, prev_hash, current_hash))
+    
+        def make_hash(data:str, prev_hash:bytes) -> bytes:
+            """해시를 만듭니다."""
+            return sha256(data.encode() + prev_hash).digest()
+
+        def add_block(data:str):
+            """블록을 블록 체인에 추가합니다."""
+            _, _, prev_hash = blockchain[-1]
+            current_hash = make_hash(data, prev_hash)
+            blockchain.append((data, prev_hash, current_hash))
+    
+        def show_blockchain():
+            """블록 체인을 보여줍니다"""
+            for i, (data, prev_hash, current_hash) in enumerate(blockchain):
+                print(f'블록 {i}\n{data}\n{prev_hash.hex()}\n{current_hash.hex()}')
+        
+        def verify_blockchain():
+            """블록 체인을 검증합니다."""
+            for i in range(1, len(blockchain)):
+                data, prev_hash, current_hash = blockchain[i]
+                last_data, last_prev_hash, last_current_hash = blockchain[i -1]
+                if prev_hash != last_current_hash:
+                    print(f"블록 {i} 이전 해시 != 블록 {i -1} 현 해시.\n"
+                        f"{prev_hash.hex()} != \n{last_current_hash.hex()}")
+                    return False
+                if last_current_hash != (temp := make_hash(last_data, last_prev_hash)):
+                    print(f"블록 {i -1} 검증 실패. \n"
+                        f"{last_hash.hex()} != \n{temp.hex()}")
+                    return False
+                if current_hash != (temp := make_hash(data, prev_hash)):
+                    print(f"블록 {i}, 검증 실패.\n"
+                        f"{current_hash.hex()} != \n{temp.hex()}")
+                    return False
+            return True
+
+        input_date = Element("input_date")
+        input_name = Element("input_name")
+        input_number = Element("input_number")
+        input_tname = Element("input_tname")
+        input_reason = Element("input_reason")
+        output_text = Element("output_text")
+        output_name = Element("output_name")
+        output_number = Element("output_number")
+        output_tname = Element("output_tname")
+        output_reason = Element("output_reason")
+        make_genesis_block()
+        add_block(f"승인 날짜 {input_date}\n 학생 이름 {input_name}\n 학번 {input_number} \n 선생님 이름 {input_tname}\n 사유 {input_reason}")
+        show_blockchain()
+        print()
+        
+        def function_add_text(*args):
+            # output_text.element.innerText = str(f"승인 날짜: {input_date} \n 학생이름: {input_name} \n 학번: {input_number} \n 담당선생님: {t_name} \n 사유: {reason}")
+            output_text.element.innerText = input_date.value
+            output_name.element.innerText = input_name.value
+            output_number.element.innerText = input_number.value
+            output_tname.element.innerText = input_tname.value
+            output_reason.element.innerText = input_reason.value
+            # add_block(f"승인 날짜 {input_date}\n 학생 이름 {input_name}\n 학번 {input_number} \n 선생님 이름 {input_tname}\n 사유 {input_reason}")
+            # show_blockchain()
+            input_date.clear()
+            input_name.clear()
+            input_number.clear()
+            input_tname.clear()
+            input_reason.clear()
+        
+    </py-script>
+    <p><span style="background: linear-gradient(to right, #ffa7a3, #5673bd); padding: 0.43em 1em; font-size: 19px; border-radius: 3px; color: #ffffff;">HAFS Permission</span></p>
+    <main class = "container">
+        <h5 id = "output_text"></h5>
+        <h5 id = "output_name"></h5>
+        <h5 id = "output_number"></h5>
+        <h5 id = "output_tname"></h5>
+        <h5 id = "output_reason"></h5>
+        <div>
+            <input id = "input_date" type="datetime-local" placeholder="날짜를 입력하세요">
+            <br>
+            <input id="input_name" type="text" placeholder="학생 이름">
+            <br>
+            <input id="input_number" type="text" placeholder="학번">
+            <br>
+            <input id="input_tname" type="text" placeholder="담당 선생님">
+            <br>
+            <input id ="input_reason" type="text" placeholder="사유">
+            <br>
+            <button id ="add_text" pys-onClick = "function_add_text">Click</button>
+        </div>
+    </main>
+  </body>
+</html>
